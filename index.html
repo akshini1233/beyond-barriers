@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Beyond Barriers - Inclusive 3D VR Sports. Basketball, Football, Tennis, Badminton, Bowling, and Archery.">
+  <meta name="theme-color" content="#080c14">
+  <title>Beyond Barriers - Inclusive VR Sports</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Screen Reader Announcements -->
+  <div id="a11y-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- 3D WebGL / WebXR Viewport -->
+  <div id="webgl-canvas-container">
+    <canvas id="webgl-canvas" tabindex="-1" aria-label="3D Sports Arena Viewport"></canvas>
+  </div>
+
+  <!-- Aim Crosshair with Selection Indicator & Gaze Dwell Ring -->
+  <div id="aim-reticle" aria-hidden="true">
+    <div class="reticle-circle" id="reticle-indicator">
+      <svg class="gaze-dwell-svg" viewBox="0 0 36 36">
+        <circle class="gaze-dwell-bg" cx="18" cy="18" r="16" />
+        <circle class="gaze-dwell-fill" id="gaze-dwell-fill" cx="18" cy="18" r="16" />
+      </svg>
+      <span class="reticle-target-badge" id="reticle-target-badge">AIM READY</span>
+    </div>
+  </div>
+
+  <!-- Dynamic Floating Feedback (Points, Swish, Strike) -->
+  <div id="floating-feedback" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Subtle Notification Toast -->
+  <aside id="a11y-live-toast" class="a11y-live-toast" aria-live="assertive" aria-atomic="true"></aside>
+
+  <!-- UI Root Container -->
+  <main id="ui-container">
+
+    <!-- =======================================================================
+         CLEAN, GAME-FIRST LAUNCHER (MINIMAL, NO CLUTTER)
+         ======================================================================= -->
+    <section id="screen-launcher" class="screen active interactive" aria-labelledby="launcher-heading">
+      <div class="launcher-card">
+        <header class="launcher-header">
+          <h1 id="launcher-heading" class="launcher-title">BEYOND BARRIERS</h1>
+          <p class="launcher-subtitle">Inclusive 3D Sports</p>
+        </header>
+
+        <!-- 1. Choose Sport -->
+        <div class="selection-section">
+          <label class="section-label">CHOOSE SPORT</label>
+          <div class="sports-pill-grid" role="radiogroup" aria-label="Choose Sport">
+            <button class="sport-pill-btn active" data-sport="basketball" role="radio" aria-checked="true">
+              <span class="pill-icon">&#x1F3C0;</span>
+              <span class="pill-name">Basketball</span>
+            </button>
+            <button class="sport-pill-btn" data-sport="football" role="radio" aria-checked="false">
+              <span class="pill-icon">&#x26BD;</span>
+              <span class="pill-name">Football</span>
+            </button>
+            <button class="sport-pill-btn" data-sport="tennis" role="radio" aria-checked="false">
+              <span class="pill-icon">&#x1F3BE;</span>
+              <span class="pill-name">Tennis</span>
+            </button>
+            <button class="sport-pill-btn" data-sport="badminton" role="radio" aria-checked="false">
+              <span class="pill-icon">&#x1F3F8;</span>
+              <span class="pill-name">Badminton</span>
+            </button>
+            <button class="sport-pill-btn" data-sport="bowling" role="radio" aria-checked="false">
+              <span class="pill-icon">&#x1F3B3;</span>
+              <span class="pill-name">Bowling</span>
+            </button>
+            <button class="sport-pill-btn" data-sport="archery" role="radio" aria-checked="false">
+              <span class="pill-icon">&#x1F3F9;</span>
+              <span class="pill-name">Archery</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Choose Input & Accessibility Mode -->
+        <div class="selection-section">
+          <label class="section-label">INPUT METHOD &amp; ACCESSIBILITY</label>
+          <div class="preset-pill-grid preset-grid-4" role="radiogroup" aria-label="Input Method &amp; Accessibility">
+            <button class="preset-pill-btn active" data-preset="seated" role="radio" aria-checked="true" title="Seated Movement: 1.25m Eye-Level, Wheelchair Friendly">
+              <span class="preset-icon">&#x267F;</span>
+              <span class="preset-name">Seated Mode</span>
+            </button>
+            <button class="preset-pill-btn" data-preset="adaptive-triggers" role="radio" aria-checked="false" title="Adaptive Triggers: Single Tap / Auto-Oscillate">
+              <span class="preset-icon">&#x26A1;</span>
+              <span class="preset-name">Adaptive Triggers</span>
+            </button>
+            <button class="preset-pill-btn" data-preset="gaze" role="radio" aria-checked="false" title="Gaze Targeting: Look to aim, hands-free dwell">
+              <span class="preset-icon">&#x1F441;</span>
+              <span class="preset-name">Gaze Targeting</span>
+            </button>
+            <button class="preset-pill-btn" data-preset="standard" role="radio" aria-checked="false" title="Controller &amp; Keyboard: Standard regulation manual input">
+              <span class="preset-icon">&#x1F3AE;</span>
+              <span class="preset-name">Controller / Keys</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3. Session Duration (Comfort & Fatigue) -->
+        <div class="selection-section">
+          <label class="section-label">SESSION LENGTH (COMFORT &amp; FATIGUE)</label>
+          <div class="duration-pill-grid" role="radiogroup" aria-label="Session Duration">
+            <button class="duration-pill-btn" data-duration="30" role="radio" aria-checked="false">30s Quick</button>
+            <button class="duration-pill-btn active" data-duration="60" role="radio" aria-checked="true">60s Match</button>
+            <button class="duration-pill-btn" data-duration="120" role="radio" aria-checked="false">120s Full</button>
+            <button class="duration-pill-btn" data-duration="0" role="radio" aria-checked="false">&#x221E; Practice</button>
+          </div>
+        </div>
+
+        <!-- Launcher Actions -->
+        <div class="launcher-actions">
+          <button id="btn-play-now" class="btn btn-primary btn-large btn-play" autofocus>
+            <span>PLAY MATCH</span>
+            <span aria-hidden="true">&#x25B6;</span>
+          </button>
+          <button id="btn-open-settings" class="btn btn-secondary">
+            <span>&#x2699; Settings</span>
+          </button>
+          <button id="btn-enter-vr" class="btn btn-accent" title="Enter WebXR VR">
+            <span>&#x1F97D; Enter VR</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         STREAMLINED IN-GAME HUD (GAME-FIRST BROADCAST SCOREBOARD)
+         ======================================================================= -->
+    <div id="game-hud" aria-label="Game Heads Up Display">
+      <!-- Top Broadcast Match Scoreboard Bar -->
+      <header class="hud-top-bar">
+        <!-- Live Dual-Team Match Scoreboard -->
+        <div class="hud-card hud-scoreboard-box">
+          <!-- Blue Team -->
+          <div class="scoreboard-team team-blue">
+            <span class="team-tag">BLUE</span>
+            <span class="team-score-digits" id="hud-score-blue">0</span>
+          </div>
+
+          <!-- Match Time & Shot Clock -->
+          <div class="scoreboard-center">
+            <div class="clock-display" id="hud-match-clock">01:00</div>
+            <div class="shot-clock-pill" id="hud-shot-clock">18s</div>
+          </div>
+
+          <!-- Red Team -->
+          <div class="scoreboard-team team-red">
+            <span class="team-score-digits" id="hud-score-red">0</span>
+            <span class="team-tag">RED</span>
+          </div>
+        </div>
+
+        <!-- Pause Button -->
+        <button id="btn-hud-pause" class="btn btn-secondary btn-icon" title="Pause Game (P or Esc)" aria-label="Pause Game">
+          <span>&#x23F8;</span>
+        </button>
+      </header>
+
+      <!-- Minimal Interactive Warm-Up Tutorial Card -->
+      <div id="tutorial-overlay" class="tutorial-overlay" aria-live="polite">
+        <div class="tutorial-card">
+          <div class="tutorial-header">
+            <span class="tutorial-step-badge" id="tut-step-badge">WARM-UP 1/3</span>
+            <button id="btn-skip-tutorial" class="btn-skip-tut" title="Skip Warm-Up">Skip &rarr;</button>
+          </div>
+          <h3 id="tut-title" class="tutorial-title">&#x1F3C0; MOVE</h3>
+          <p id="tut-desc" class="tutorial-desc">Tap <strong>LEFT</strong> or <strong>RIGHT</strong> to change spot.</p>
+          <div class="tutorial-progress-dots">
+            <span class="tut-dot active" id="tut-dot-1"></span>
+            <span class="tut-dot" id="tut-dot-2"></span>
+            <span class="tut-dot" id="tut-dot-3"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Minimal Action Bar -->
+      <footer class="hud-bottom-bar">
+        <!-- Quick Interaction & Accessibility Toolbar (Adaptive Triggers, Gaze, Session Length) -->
+        <div class="hud-interaction-pills" role="toolbar" aria-label="Quick Interaction Modes">
+          <button id="btn-toggle-trigger" class="btn-hud-pill" title="Adaptive Triggers: Tap / Hold / Oscillate">
+            <span class="hud-pill-icon">&#x26A1;</span>
+            <span class="hud-pill-label" id="hud-pill-trigger-lbl">TRIGGER: TAP</span>
+          </button>
+          <button id="btn-toggle-gaze" class="btn-hud-pill" title="Gaze Targeting: Dwell look to aim &amp; shoot">
+            <span class="hud-pill-icon">&#x1F441;</span>
+            <span class="hud-pill-label" id="hud-pill-gaze-lbl">GAZE: OFF</span>
+          </button>
+          <button id="btn-toggle-duration" class="btn-hud-pill" title="Session Length (Comfort &amp; Fatigue)">
+            <span class="hud-pill-icon">&#x23F1;</span>
+            <span class="hud-pill-label" id="hud-pill-duration-lbl">60s MATCH</span>
+          </button>
+        </div>
+
+        <!-- Court Position Minimal Switcher -->
+        <div class="hud-position-bar" role="group" aria-label="Court Playing Position">
+          <button id="btn-pos-left" class="btn btn-pos" title="Left Wing (1)">
+            <span>&#x2190; LEFT</span>
+          </button>
+          <button id="btn-pos-home" class="btn btn-pos active" title="Home Spot (2 / C)">
+            <span>&#x2605; HOME</span>
+          </button>
+          <button id="btn-pos-right" class="btn btn-pos" title="Right Wing (3)">
+            <span>RIGHT &#x2192;</span>
+          </button>
+        </div>
+
+        <!-- Sleek Minimal Power Gauge -->
+        <div class="power-bar-wrapper" title="Shot Power">
+          <div id="power-bar-fill" class="power-bar-fill"></div>
+        </div>
+
+        <!-- Minimal Action Cluster -->
+        <div class="hud-action-cluster">
+          <button id="btn-pass-left" class="btn btn-team-pass" aria-label="Pass Left (E)">
+            <span>&#x21B0; PASS</span>
+          </button>
+          <button id="btn-primary-action" class="btn btn-primary btn-primary-action" aria-label="Perform Primary Sport Action">
+            <span>SHOOT</span>
+          </button>
+          <button id="btn-pass-right" class="btn btn-team-pass" aria-label="Pass Right (F)">
+            <span>PASS &#x21B1;</span>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <!-- =======================================================================
+         CHAMPIONSHIP MATCH RESULT MODAL
+         ======================================================================= -->
+    <div id="modal-match-result" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="match-result-title">
+      <div class="modal-content interactive match-result-card">
+        <header class="panel-header" style="flex-direction:column; gap:4px; text-align:center;">
+          <div id="result-trophy-icon" style="font-size:3rem; margin-bottom:4px;">&#x1F3C6;</div>
+          <h2 id="match-result-title" class="panel-title" style="font-size:1.8rem;">MATCH COMPLETE!</h2>
+          <p id="match-result-subtitle" style="color:var(--text-secondary); font-size:0.95rem;">BLUE TEAM FINISHES STRONG!</p>
+        </header>
+
+        <div class="result-score-banner">
+          <div class="team-score-pill blue-pill">
+            <span class="pill-team-name">BLUE TEAM</span>
+            <span class="pill-team-score" id="result-blue-score">18</span>
+          </div>
+          <div class="vs-badge">FINAL</div>
+          <div class="team-score-pill red-pill">
+            <span class="pill-team-score" id="result-red-score">14</span>
+            <span class="pill-team-name">RED OPPONENTS</span>
+          </div>
+        </div>
+
+        <div class="match-stats-grid">
+          <div class="stat-pill"><span class="stat-lbl">Points</span><strong id="stat-points">18</strong></div>
+          <div class="stat-pill"><span class="stat-lbl">Assists</span><strong id="stat-assists">4</strong></div>
+          <div class="stat-pill"><span class="stat-lbl">Rebounds</span><strong id="stat-rebounds">3</strong></div>
+          <div class="stat-pill"><span class="stat-lbl">Accuracy</span><strong id="stat-accuracy">75%</strong></div>
+        </div>
+
+        <div class="match-result-actions" style="display:flex; gap:12px; justify-content:center; margin-top:20px;">
+          <button id="btn-result-rematch" class="btn btn-primary btn-large" style="flex:1;">&#x26A1; PLAY REMATCH</button>
+          <button id="btn-result-change-sport" class="btn btn-secondary btn-large" style="flex:1;">&#x1F3C0; CHANGE SPORT</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         PAUSE MODAL
+         ======================================================================= -->
+    <div id="modal-pause" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+      <div class="modal-content interactive pause-card">
+        <header class="panel-header">
+          <h2 id="pause-title" class="panel-title">&#x23F8; MATCH PAUSED</h2>
+        </header>
+        <div class="pause-actions">
+          <button id="btn-pause-resume" class="btn btn-primary btn-large">&#x25B6; RESUME</button>
+          <button id="btn-pause-restart" class="btn btn-secondary btn-large">&#x21BB; RESTART MATCH</button>
+          <button id="btn-pause-change-sport" class="btn btn-secondary btn-large">&#x1F3C0; CHANGE SPORT</button>
+          <button id="btn-pause-settings" class="btn btn-secondary btn-large">&#x2699; SETTINGS</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         ACCESSIBILITY SETTINGS & INCLUSIVE DESIGN PRINCIPLES MODAL
+         ======================================================================= -->
+    <div id="modal-settings" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-modal-title">
+      <div class="modal-content interactive settings-card settings-card-wide">
+        <header class="panel-header">
+          <h2 id="settings-modal-title" class="panel-title">&#x2699; SETTINGS &amp; INCLUSIVE DESIGN</h2>
+          <button id="btn-close-settings" class="btn btn-secondary btn-icon" aria-label="Close Settings">&#x2715;</button>
+        </header>
+
+        <!-- Two Tab Switcher -->
+        <div class="settings-tab-bar" role="tablist">
+          <button id="tab-btn-controls" class="settings-tab-btn active" role="tab" aria-selected="true" aria-controls="settings-tab-controls">
+            <span>&#x2699; Accessibility &amp; Ergonomics</span>
+          </button>
+          <button id="tab-btn-principles" class="settings-tab-btn" role="tab" aria-selected="false" aria-controls="settings-tab-principles">
+            <span>&#x1F4CB; Design Principles &amp; Input Matrix</span>
+          </button>
+        </div>
+
+        <!-- TAB 1: ACCESSIBILITY CONTROLS & ERGONOMICS -->
+        <div id="settings-tab-controls" class="settings-tab-panel active" role="tabpanel">
+          <div class="settings-grid">
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="chk-seated-mode">Seated / Wheelchair Mode</label>
+                <input type="checkbox" id="chk-seated-mode" checked>
+              </div>
+              <p class="setting-desc">Sets eye-level to 1.25m with smooth camera height transition.</p>
+            </div>
+
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="sel-trigger-mode">Adaptive Trigger Mode</label>
+                <select id="sel-trigger-mode">
+                  <option value="tap" selected>Tap (Instant calibrated shot, zero fatigue)</option>
+                  <option value="hold">Hold &amp; Release (Manual power charging)</option>
+                  <option value="oscillate">Auto-Oscillate (2-tap timing meter)</option>
+                </select>
+              </div>
+              <p class="setting-desc">Replaces tiring arm swings with adjustable button triggers.</p>
+            </div>
+
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="chk-gaze-targeting">Gaze Dwell Targeting</label>
+                <input type="checkbox" id="chk-gaze-targeting">
+              </div>
+              <p class="setting-desc">Look at hoop or teammate for 0.8s to aim and auto-confirm.</p>
+            </div>
+
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="sel-session-duration">Session Duration</label>
+                <select id="sel-session-duration">
+                  <option value="30">30 Seconds (Quick burst, low fatigue)</option>
+                  <option value="60" selected>60 Seconds (Regulation match)</option>
+                  <option value="120">120 Seconds (Full championship)</option>
+                  <option value="0">&#x221E; Practice Mode (Untimed free play)</option>
+                </select>
+              </div>
+              <p class="setting-desc">Comfort &amp; fatigue pacing tailored to physical stamina.</p>
+            </div>
+
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="sel-game-pace">Game Pace Dilation</label>
+                <select id="sel-game-pace">
+                  <option value="relaxed" selected>0.7x Relaxed (Slower ball, more reaction time)</option>
+                  <option value="standard">1.0x Regulation Speed</option>
+                  <option value="fast">1.25x Fast Pace</option>
+                </select>
+              </div>
+              <p class="setting-desc">Scales physics and reaction timing for comfortable play.</p>
+            </div>
+
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="sel-aim-assist">Aim Assistance</label>
+                <select id="sel-aim-assist">
+                  <option value="high" selected>High (Strong trajectory guidance)</option>
+                  <option value="medium">Medium (Balanced)</option>
+                  <option value="off">Off (Manual skill)</option>
+                </select>
+              </div>
+              <p class="setting-desc">Magnetically pulls shots toward target center.</p>
+            </div>
+
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="chk-high-contrast">High Contrast Theme</label>
+                <input type="checkbox" id="chk-high-contrast">
+              </div>
+              <p class="setting-desc">Pure black background with vivid yellow borders.</p>
+            </div>
+
+            <div class="setting-card">
+              <div class="setting-title">
+                <label for="chk-audio-feedback">Audio &amp; Gentle Guidance</label>
+                <input type="checkbox" id="chk-audio-feedback" checked>
+              </div>
+              <p class="setting-desc">Web Audio sound cues with supportive coaching and no harsh penalties.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: INCLUSIVE DESIGN PRINCIPLES & INPUT MATRIX -->
+        <div id="settings-tab-principles" class="settings-tab-panel" role="tabpanel" style="display:none;">
+          <div class="principles-tables-wrap">
+            <!-- Table 1: Design Principles -->
+            <div class="principles-block">
+              <h3 class="principles-heading">&#x1F3AF; Design Principles &amp; Interaction Design</h3>
+              <table class="principles-table">
+                <thead>
+                  <tr>
+                    <th style="width:28%;">Design principle</th>
+                    <th>Interaction design</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Affordances &amp; signifiers</strong></td>
+                    <td>Interactive objects use clear outlines, contrasting colours, icons, and short labels. Targets highlight when selected or focused.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Hover &amp; selection feedback</strong></td>
+                    <td>Objects change colour or glow when targeted. A selection indicator confirms where the user is aiming.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Action feedback</strong></td>
+                    <td>Successful throws, passes, and hits trigger animations, score updates, and optional spatial audio or controller vibration.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Error recovery</strong></td>
+                    <td>Missed actions show gentle visual guidance and allow retries without harsh penalties.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Spatial ergonomics</strong></td>
+                    <td>Keep menus within a comfortable forward field of view, around eye level, and avoid requiring repeated overhead reaching.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Comfort &amp; fatigue</strong></td>
+                    <td>Provide seated play, adjustable session lengths, pause options, and alternatives to large arm movements.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Interaction challenge &amp; iteration</strong></td>
+                    <td>If a full-arm swing is tiring or difficult to detect, replace it with a short flick or button-triggered action and test whether it feels easier to control.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Table 2: Input Methods -->
+            <div class="principles-block" style="margin-top:20px;">
+              <h3 class="principles-heading">&#x1F3AE; Input Method &amp; Rationale Matrix</h3>
+              <table class="principles-table">
+                <thead>
+                  <tr>
+                    <th style="width:24%;">Input method</th>
+                    <th style="width:38%;">How the user interacts</th>
+                    <th>Why it was chosen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Hand tracking</strong></td>
+                    <td>Pinch, grab, or perform a short hand gesture to interact with objects.</td>
+                    <td>Supports natural interaction without requiring complex controller movements.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Controller input</strong></td>
+                    <td>Press buttons to shoot, pass, hit, or activate actions.</td>
+                    <td>Provides reliable alternatives for users who find gestures difficult.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Gaze targeting</strong></td>
+                    <td>Look at a target to aim or highlight an object.</td>
+                    <td>Reduces the need for large arm movements.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Seated movement</strong></td>
+                    <td>Use a joystick, small lean, or simplified input to move or reposition.</td>
+                    <td>Supports users who play from a wheelchair or seated position.</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Adaptive triggers</strong></td>
+                    <td>Use a tap, hold, or release to perform a sport action.</td>
+                    <td>Makes actions adjustable to different physical abilities.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px; text-align:right;">
+          <button id="btn-close-settings-done" class="btn btn-primary">DONE</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 3D & Application Script Modules -->
+  <script src="js/three.min.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/accessibility.js"></script>
+  <script src="js/character.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/arena.js"></script>
+  <script src="js/sports/SportBase.js"></script>
+  <script src="js/sports/BasketballSport.js"></script>
+  <script src="js/sports/FootballSport.js"></script>
+  <script src="js/sports/TennisSport.js"></script>
+  <script src="js/sports/BadmintonSport.js"></script>
+  <script src="js/sports/BowlingSport.js"></script>
+  <script src="js/sports/ArcherySport.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
